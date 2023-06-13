@@ -1,3 +1,5 @@
+import sqlite3
+conn = sqlite3.connect('order.db', check_same_thread=False)
 # ЗАПОЛНЕНИЕ ТАБЛИЦЫ user
 def filling_db_user(message):
     text = message.text.split(',')
