@@ -1,16 +1,44 @@
 import telebot
+from telebot import apihelper, types
 import sqlite3
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
-from telebot import apihelper, types
 
 API_KEY = os.getenv("API_KEY")
 bot = telebot.TeleBot(API_KEY)
 adminid = int(os.getenv("ADMIN_ID"))
 password = os.getenv("PASSSWORD")
 conn = sqlite3.connect('order.db', check_same_thread=False)
+
+
+# ЗАПОЛНЕНИЕ ТАБЛИЦЫ user
+def filling_db_user(message):
+    text = message.text.split(',')
+    persondiscount = text[0]
+    amountoforders = text[1]
+    preferreddish = text[2]
+
+    add_db_user(persondiscount, amountoforders, preferreddish)
+
+
+# ЗАПОЛНЕНИЕ ТАБЛИЦЫ orders
+def filling_db_orders(message):
+    text = message.text.split(',')
+
+    countdish = text[0]
+    suminrubles = text[1]
+    timeorder = text[2]
+
+    add_db_orders(countdish, suminrubles, timeorder)
+
+
+# ЗАПОЛНЕНИЕ ТАБЛИЦЫ dishes
+def filling_db_dishes(message):
+    text = message.text.split(',')
+    namedish = text[0]
+    price = text[1]
+    add_db_dishes(namedish, price)
 
 
 # ЗАПОЛНЕНИЕ БД dishes
@@ -76,45 +104,16 @@ def callback_message(callback):
     # ЗАПОЛНЕНИЕ БД DISHES
     if callback.data == 'dishesadd':
         data = bot.send_message(callback.message.chat.id, 'Введите название блюда, цену')
-
-        @bot.message_handler()
-        def filling_db_dishes(message):
-            text = message.text.split(',')
-            namedish = text[0]
-            price = text[1]
-            add_db_dishes(namedish, price)
-
         bot.register_next_step_handler(data, filling_db_dishes)
 
     # ЗАПОЛНЕНИЕ БД orders
     if callback.data == 'ordersadd':
         data = bot.send_message(callback.message.chat.id, 'Введите колво, сумму в рублях, время заказа')
-
-        @bot.message_handler()
-        def filling_db_orders(message):
-            text = message.text.split(',')
-
-            countdish = text[0]
-            suminrubles = text[1]
-            timeorder = text[2]
-
-            add_db_orders(countdish, suminrubles, timeorder)
-
         bot.register_next_step_handler(data, filling_db_orders)
 
     # ЗАПОЛНЕНИЕ БД user
     if callback.data == 'useradd':
         data = bot.send_message(callback.message.chat.id, 'Введите персональную скидку, колвозаказов, любимое блюдо')
-
-        @bot.message_handler()
-        def filling_db_user(message):
-            text = message.text.split(',')
-            persondiscount = text[0]
-            amountoforders = text[1]
-            preferreddish = text[2]
-
-            add_db_user(persondiscount, amountoforders, preferreddish)
-
         bot.register_next_step_handler(data, filling_db_user)
 
     # ВЫВОДДАННЫХ bd dishes
@@ -122,7 +121,7 @@ def callback_message(callback):
     if callback.data == 'dishesout':
         bot.send_message(callback.message.chat.id, 'Вывожу список данных bd dishes')
         cos = conn.cursor()
-        sqlite_select_query = """SELECT * from orders"""
+        sqlite_select_query = """SELECT * from dishes"""
         cos.execute(sqlite_select_query)
         records = cos.fetchall()
         bot.send_message(callback.message.chat.id, 'Всепго строк: ' + str(len(records)))
@@ -153,7 +152,7 @@ def callback_message(callback):
     if callback.data == 'userout':
         bot.send_message(callback.message.chat.id, 'Вывожу список данных bd user')
         cos = conn.cursor()
-        sqlite_select_query = """SELECT * from orders"""
+        sqlite_select_query = """SELECT * from user"""
         cos.execute(sqlite_select_query)
         records = cos.fetchall()
         bot.send_message(callback.message.chat.id, 'Всепго строк: ' + str(len(records)))
